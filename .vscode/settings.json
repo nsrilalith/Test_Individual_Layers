@@ -4,6 +4,7 @@
         "convolve.h": "c",
         "convolve4.h": "c",
         "convolve2.h": "c",
-        "softmax.h": "c"
+        "softmax.h": "c",
+        "stdio.h": "c"
     }
 }

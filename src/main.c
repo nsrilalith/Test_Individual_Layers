@@ -2,6 +2,7 @@
 #include "maxpool.h"
 #include "maxpool2.h"
 #include "maxpool4.h"
+#include "maxpool5.h"
 #include "convolve.h"
 #include "convolve2.h"
 #include "convolve3.h"
@@ -9,6 +10,7 @@
 #include "convolve5.h"
 #include "convolve6.h"
 #include "softmax.h"
+#include "softmax20.h"
 #include <stdio.h>
 
 void maxpooling_arm_max_pool_s8(void)
@@ -188,6 +190,67 @@ void maxpooling_4_arm_max_pool_s8(void)
     printf("Output Expected Matrix: \n");
     for (int i = 0; i<MAXPOOLING_4_DST_SIZE; i++){
         printf("%d ", maxpooling_4_output_ref[i]);
+    }
+    printf("\n");
+        
+}
+
+void maxpooling_20_neuron(void)
+{
+    const arm_cmsis_nn_status expected = ARM_CMSIS_NN_SUCCESS;
+    int8_t output[MAXPOOLING_20_DST_SIZE] = {0};
+
+    cmsis_nn_context ctx;
+    cmsis_nn_pool_params pool_params;
+    cmsis_nn_dims input_dims;
+    cmsis_nn_dims filter_dims;
+    cmsis_nn_dims output_dims;
+
+    const int8_t *input_data = maxpooling_20_input;
+
+    input_dims.n = MAXPOOLING_20_INPUT_BATCHES;
+    input_dims.w = MAXPOOLING_20_INPUT_W;
+    input_dims.h = MAXPOOLING_20_INPUT_H;
+    input_dims.c = MAXPOOLING_20_IN_CH;
+    filter_dims.w = MAXPOOLING_20_FILTER_X;
+    filter_dims.h = MAXPOOLING_20_FILTER_Y;
+    output_dims.w = MAXPOOLING_20_OUTPUT_W;
+    output_dims.h = MAXPOOLING_20_OUTPUT_H;
+    output_dims.c = MAXPOOLING_20_OUT_CH;
+
+    pool_params.padding.w = MAXPOOLING_20_PAD_X;
+    pool_params.padding.h = MAXPOOLING_20_PAD_Y;
+    pool_params.stride.w = MAXPOOLING_20_STRIDE_X;
+    pool_params.stride.h = MAXPOOLING_20_STRIDE_Y;
+
+    pool_params.activation.min = MAXPOOLING_20_OUT_ACTIVATION_MIN;
+    pool_params.activation.max = MAXPOOLING_20_OUT_ACTIVATION_MAX;
+
+   
+    arm_cmsis_nn_status result = arm_max_pool_s8(&ctx, &pool_params, &input_dims, input_data, &filter_dims, &output_dims, output);
+
+    int flag = 0;
+    for (int i = 0; i<MAXPOOLING_20_DST_SIZE; i++){
+        if (output[i] != maxpooling_20_output_ref[i]){
+            flag = 0;
+        }
+        else{
+            flag = 1;
+        }
+    }
+    if(flag == 1){
+        printf("Max Pooling Test Passed\n");
+    }
+
+    printf("Output Matrix: \n");
+    for (int i = 0; i<MAXPOOLING_20_DST_SIZE; i++){
+        printf("%d, ", output[i]);
+    }
+
+    printf("\n");
+    printf("Output Expected Matrix: \n");
+    for (int i = 0; i<MAXPOOLING_20_DST_SIZE; i++){
+        printf("%d ", maxpooling_20_output_ref[i]);
     }
     printf("\n");
         
@@ -797,6 +860,47 @@ void softmax_arm_softmax_s8(void)
     for (int i = 0; i<SOFTMAX_DST_SIZE; i++){
         printf("%d ", softmax_output_ref[i]);
     }
+    printf("\n");
+}
+
+void softmax_20_neuron(void)
+{
+    const int32_t num_rows = SOFTMAX_20_NUM_ROWS;
+    const int32_t row_size = SOFTMAX_20_ROW_SIZE;
+    const int32_t mult = SOFTMAX_20_INPUT_MULT;
+    const int32_t shift = SOFTMAX_20_INPUT_LEFT_SHIFT;
+    const int32_t diff_min = SOFTMAX_20_DIFF_MIN;
+    const int8_t *input_data = softmax_20_input;
+    int8_t output[SOFTMAX_20_DST_SIZE];
+    
+    arm_softmax_s8(input_data, num_rows, row_size, mult, shift, diff_min, output);
+
+    int flag = 0;
+    
+    for(int i = 0; i < SOFTMAX_20_DST_SIZE; i++){
+        if(output[i] != softmax_20_output_ref[i]){
+            flag = 0;
+        }
+        else{
+            flag = 1;
+        }
+    }
+
+    if(flag = 1){
+        printf("\nSoftmax Test Passed\n");
+    }
+
+    printf("Computed Output: \n");
+    for (int i = 0; i<SOFTMAX_20_DST_SIZE; i++){
+        printf("%d, ", output[i]);
+    }
+    printf("\n");
+
+    printf("Expected Output \n");
+    for (int i = 0; i<SOFTMAX_20_DST_SIZE; i++){
+        printf("%d ", softmax_20_output_ref[i]);
+    }
+    printf("\n");
 }
 
 int main(void){
@@ -809,5 +913,7 @@ int main(void){
     // conv_2_arm_convolve_s8();
     // conv_3_arm_convolve_s8();
     // kernel1x1_arm_convolve_1x1_s8_fast();
-    kernel1x1_stride_x_y_arm_convolve_1x1_s8();
+    // kernel1x1_stride_x_y_arm_convolve_1x1_s8();
+    maxpooling_20_neuron();
+    softmax_20_neuron();
 }
